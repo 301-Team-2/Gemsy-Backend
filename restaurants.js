@@ -33,14 +33,22 @@ function formatRestaurantData(restaurantData) {
 }
 
 async function getRestaurantData(location) {
-  const customHeaders = {
-    Authorization: `Bearer ${YELP_API_KEY}`,
-    'Content-Type': 'application/json',
-  };
-  const response = await axios.get(`${yelpUrl}?location=${location}`, {
-    headers: customHeaders,
-  });
-  return response.data.businesses;
+  try {
+    const customHeaders = {
+      Authorization: `Bearer ${YELP_API_KEY}`,
+      'Content-Type': 'application/json',
+    };
+    const response = await axios.get(
+      `${yelpUrl}?location=${location}&term=restaurants`,
+      {
+        headers: customHeaders,
+      }
+    );
+    return response.data.businesses;
+  } catch (error) {
+    console.error(error);
+    return error;
+  }
 }
 
 const handleRestaurantsRequest = async (req, res) => {

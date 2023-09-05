@@ -14,6 +14,17 @@ app.use(cors());
 
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
+// app.post('/events', (req res) => {
+//   console.log('SOMEONE HAS POSTED TO /events!!');
+//   try {
+//     const searchFormData = req.body;
+
+//     res.json({ message: 'Data received successfully' });
+//   } cstch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({ })
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log('App is listening.');
