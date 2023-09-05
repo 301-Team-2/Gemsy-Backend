@@ -2,6 +2,7 @@
 
 const dotenv = require('dotenv').config();
 const axios = require('axios');
+const { response } = require('express');
 
 const YELP_API_KEY = process.env.YELP_API_KEY;
 
@@ -55,22 +56,22 @@ function formatEventData(eventData) {
 }
 
 async function getEventData(location) {
-  // try {
-  const customHeaders = {
-    Authorization: `Bearer ${YELP_API_KEY}`,
-    'Content-Type': 'application/json',
-  };
-  const response = await axios.get(
-    `${yelpUrl}/events?location=${location}&limit=10`,
-    {
-      headers: customHeaders,
-    }
-  );
-  return response.data.events;
-  // } catch (error) {
-  //   console.error(error);
-
-  // }
+  try {
+    const customHeaders = {
+      Authorization: `Bearer ${YELP_API_KEY}`,
+      'Content-Type': 'application/json',
+    };
+    const response = await axios.get(
+      `${yelpUrl}/events?location=${location}&limit=10`,
+      {
+        headers: customHeaders,
+      }
+    );
+    return response.data.events;
+  } catch (error) {
+    console.error(error);
+    return error;
+  }
 }
 
 const handleEventsRequest = async (req, res) => {
