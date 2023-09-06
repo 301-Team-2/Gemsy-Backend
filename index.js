@@ -8,17 +8,37 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
+const readline = require('readline');
 
 
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY
 });
-openai.chat.completions.create({
-  model: 'gpt-3.5-turbo',
-  messages: [{role: 'user', content: 'This is a test!'}]
-}).then(res => {
+// openai.chat.completions.create({
+//   model: 'gpt-3.5-turbo',
+//   messages: [{role: 'user', content: input}]
+// }).then(res => {
+//   console.log(res.choices);
+// });
+const userInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+userInterface.prompt();
+userInterface.on('line', async input => {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [{role: 'user', content: input}]
+  });
   console.log(res.choices);
+  userInterface.prompt();
+
+  // .then(res => {
+  //   console.log(res.choices);
+  // });
+
+
 });
 
 console.log('your api key is: ' + process.env.OPENAI_API_KEY);
