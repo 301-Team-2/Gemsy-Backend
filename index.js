@@ -1,5 +1,6 @@
 'use strict';
 
+const OpenAIApi = require('openai');
 const dotenv = require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -8,6 +9,19 @@ const mongoose = require('mongoose');
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
 
+
+
+const openai = new OpenAIApi({
+  apiKey: process.env.OPENAI_API_KEY
+});
+openai.chat.completions.create({
+  model: 'gpt-3.5-turbo',
+  messages: [{role: 'user', content: 'This is a test!'}]
+}).then(res => {
+  console.log(res.choices);
+});
+
+console.log('your api key is: ' + process.env.OPENAI_API_KEY);
 const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cors());
