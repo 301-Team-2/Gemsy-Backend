@@ -41,7 +41,7 @@ userInterface.on('line', async input => {
 
 });
 
-console.log('your api key is: ' + process.env.OPENAI_API_KEY);
+
 const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cors());
