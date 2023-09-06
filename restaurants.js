@@ -55,7 +55,6 @@ const handleRestaurantsRequest = async (req, res) => {
   const { searchQuery } = req.query;
   if (!searchQuery) {
     res.status(400).send('Bad Request');
-    console.log();
     return;
   } else {
     let recievedRestaurantData = await getRestaurantData(searchQuery);
