@@ -1,7 +1,7 @@
 'use strict';
 
-const OpenAIApi = require('openai');
 const dotenv = require('dotenv').config();
+const OpenAIApi = require('openai');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -9,11 +9,15 @@ const mongoose = require('mongoose');
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
 const readline = require('readline');
+const app = express();
+app.use(cors());
+const PORT = process.env.PORT || 3001;
 
-
+const eventsRoute = require('./routes/events-database.js');
+const restaurantRoute = require('./routes/restaurants-database.js');
 
 const openai = new OpenAIApi({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 // openai.chat.completions.create({
 //   model: 'gpt-3.5-turbo',
@@ -23,13 +27,13 @@ const openai = new OpenAIApi({
 // });
 const userInterface = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 userInterface.prompt();
-userInterface.on('line', async input => {
+userInterface.on('line', async (input) => {
   const res = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
-    messages: [{role: 'user', content: input}]
+    messages: [{ role: 'user', content: input }],
   });
   console.log(res.choices);
   userInterface.prompt();
@@ -37,28 +41,13 @@ userInterface.on('line', async input => {
   // .then(res => {
   //   console.log(res.choices);
   // });
-
-
 });
-
-console.log('your api key is: ' + process.env.OPENAI_API_KEY);
-const PORT = process.env.PORT || 3001;
-const app = express();
-app.use(cors());
 
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
-// app.post('/events', (req res) => {
-//   console.log('SOMEONE HAS POSTED TO /events!!');
-//   try {
-//     const searchFormData = req.body;
 
-//     res.json({ message: 'Data received successfully' });
-//   } cstch (error) {
-//     console.error('Error:', error);
-//     res.status(500).json({ })
-//   }
-// });
+app.use('/events', eventsRoute);
+app.use('/restaurants', restaurantRoute);
 
 app.listen(PORT, () => {
   console.log('App is listening.');
