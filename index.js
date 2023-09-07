@@ -56,9 +56,8 @@ userInterface.on('line', async (input) => {
 
 
 
-const PORT = process.env.PORT || 3001;
-const app = express();
-app.use(cors());
+
+
 
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
