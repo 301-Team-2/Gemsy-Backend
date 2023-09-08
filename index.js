@@ -1,35 +1,37 @@
 'use strict';
 
 require('dotenv').config();
-
-const OpenAIApi = require('openai');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const OpenAIApi = require('openai');
 const EventModel = require('./EventModel');
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
 const { saveLocationToUser } = require('./userService');
 
-const readline = require('readline');
-
 const app = express();
 app.use(cors());
+app.use(express.json()); // Add JSON body parsing middleware
 
 const PORT = process.env.PORT || 3001;
 
-mongoose.connect('mongodb://joshshea44:b3x2u1qbrCSwSKbg@cluster0.fjkgyrj.mongodb.net/?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
-
-const User = mongoose.model('User', {
-  name: String,
-  email: String,
-  savedLocations: [{ type: String }],
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
+
+// const User = mongoose.model('User', {
+//   name: String,
+//   email: String,
+//   savedLocations: [{ type: String }],
+// });
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Define the askAI function for chat requests
 const askAI = async (input) => {
   try {
     const res = await openai.chat.completions.create({
@@ -43,34 +45,22 @@ const askAI = async (input) => {
   }
 };
 
-const userInterface = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-userInterface.prompt();
+// API routes
 
-userInterface.on('line', async (input) => {
+// Handle events creation
+app.post('/events', async (req, res) => {
   try {
-    const message = await askAI(input);
-    console.log(message);
+    const eventData = req.body;
+    const newEvent = new EventModel(eventData);
+    const savedEvent = await newEvent.save();
+    res.status(201).json(savedEvent);
   } catch (error) {
     console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-  userInterface.prompt();
 });
 
-// app.post('/events', async (req, res) => {
-//   try {
-//     const eventData = req.body;
-//     const newEvent = new EventModel(eventData);
-//     const savedEvent = await newEvent.save();
-//     res.status(201).json(savedEvent);
-//   } catch (error) {
-//     console.error('Error:', error);
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
-
+// Handle saving locations to a user
 app.post('/saveLocation', async (req, res) => {
   const userEmail = req.body.userEmail;
   const location = req.body.location;
@@ -84,6 +74,7 @@ app.post('/saveLocation', async (req, res) => {
   }
 });
 
+// Handle chat requests
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
   try {
@@ -95,29 +86,11 @@ app.get('/chat', async (req, res) => {
   }
 });
 
+// Handle other routes
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
 
-app.get('/saved-locations', async (req, res) => {
-  if (!req.user || !req.user.email) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  try {
-    const userEmail = req.user.email;
-
-    const user = await User.findOne({ email: userEmail });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json(user.savedLocations);
-  } catch (error) {
-    console.error('Error fetching saved locations:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
+// Start the server
 app.listen(PORT, () => {
   console.log(`App is listening on port ${PORT}`);
 });
