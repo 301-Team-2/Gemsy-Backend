@@ -1,10 +1,9 @@
 'use strict';
 
-// require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const RestaurantModel = require('../RestaurantModel.js');
 const router = express.Router();
-// const app = express();
 
 router.get('/', async (req, res) => {
   try {
@@ -12,6 +11,7 @@ router.get('/', async (req, res) => {
     res.json(documents);
   } catch (error) {
     console.error('Could not connect to restaurant DB', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -25,17 +25,33 @@ router.post('/', async (req, res) => {
     price,
     location,
   });
-  let document = await restaurant.save();
-  res.json(document);
+
+  try {
+    let document = await restaurant.save();
+    res.json(document);
+  } catch (error) {
+    console.error('Error saving restaurant', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-router.delete('/restaurantId', async (req, res) => {
+router.delete('/:restaurantId', async (req, res) => {
   if (!req.params.restaurantId) {
     res.status(404).send('Please provide a valid restaurant ID.');
     return;
   }
-  let result = await RestaurantModel.findByIdAndDelete(req.params.restaurantId);
-  res.status(204).send('Successfully deleted.');
+
+  try {
+    let result = await RestaurantModel.findByIdAndDelete(req.params.restaurantId);
+    if (result) {
+      res.status(204).send('Successfully deleted.');
+    } else {
+      res.status(404).send('Restaurant not found.');
+    }
+  } catch (error) {
+    console.error('Error deleting restaurant', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 module.exports = router;

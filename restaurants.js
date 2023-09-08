@@ -1,7 +1,9 @@
 'use strict';
 
-const dotenv = require('dotenv').config();
+const dotenv = require('dotenv');
 const axios = require('axios');
+
+dotenv.config();
 
 const YELP_API_KEY = process.env.YELP_API_KEY;
 
@@ -20,13 +22,12 @@ class Restaurant {
 
 function formatRestaurantData(restaurantData) {
   const formattedRestaurantData = restaurantData.map((item) => {
-    let name = item.name;
-    let image_url = item.image_url;
-    let url = item.url;
-    let rating = item.rating;
-    let price = item.price;
-
-    let location = `${item.location.display_address[0]},${item.location.display_address[1]}`;
+    const name = item.name;
+    const image_url = item.image_url;
+    const url = item.url;
+    const rating = item.rating;
+    const price = item.price;
+    const location = `${item.location.display_address[0]}, ${item.location.display_address[1]}`;
     return new Restaurant(name, image_url, url, rating, price, location);
   });
   return formattedRestaurantData;
@@ -46,20 +47,26 @@ async function getRestaurantData(location) {
     );
     return response.data.businesses;
   } catch (error) {
-    console.error(error);
-    return error;
+    console.error('Error fetching restaurant data:', error.message);
+    throw new Error('Failed to fetch restaurant data.');
   }
 }
 
 const handleRestaurantsRequest = async (req, res) => {
   const { searchQuery } = req.query;
   if (!searchQuery) {
-    res.status(400).send('Bad Request');
+    res.status(400).json({ error: 'Bad Request' });
     return;
   } else {
-    let recievedRestaurantData = await getRestaurantData(searchQuery);
-    let formattedRestaurantData = formatRestaurantData(recievedRestaurantData);
-    res.status(200).json(formattedRestaurantData);
+    try {
+      const receivedRestaurantData = await getRestaurantData(searchQuery);
+      const formattedRestaurantData = formatRestaurantData(
+        receivedRestaurantData
+      );
+      res.status(200).json(formattedRestaurantData);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
