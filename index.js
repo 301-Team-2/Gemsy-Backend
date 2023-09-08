@@ -15,7 +15,13 @@ app.use(cors());
 app.use(express.json()); // Add JSON body parsing middleware
 
 const PORT = process.env.PORT || 3001;
+const { verifyUser } = require('./auth'); // Adjust the path as needed
 
+// Apply the middleware to routes that need authentication
+app.use('/', verifyUser, (req, res) => {
+  // This route is protected and requires authentication
+  res.json({ message: 'Authenticated route', user: req.user });
+});
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
