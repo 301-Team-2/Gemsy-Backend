@@ -59,17 +59,17 @@ userInterface.on('line', async (input) => {
   userInterface.prompt();
 });
 
-app.post('/events', async (req, res) => {
-  try {
-    const eventData = req.body;
-    const newEvent = new EventModel(eventData);
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// app.post('/events', async (req, res) => {
+//   try {
+//     const eventData = req.body;
+//     const newEvent = new EventModel(eventData);
+//     const savedEvent = await newEvent.save();
+//     res.status(201).json(savedEvent);
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 app.post('/saveLocation', async (req, res) => {
   const userEmail = req.body.userEmail;
@@ -98,7 +98,7 @@ app.get('/chat', async (req, res) => {
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
 
-app.get('/api/saved-locations', async (req, res) => {
+app.get('/saved-locations', async (req, res) => {
   if (!req.user || !req.user.email) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
