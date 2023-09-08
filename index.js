@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const verifyUser = require('./auth/authorize');
 const OpenAIApi = require('openai');
 const EventModel = require('./EventModel');
 const handleEventsRequest = require('./events.js');
@@ -12,7 +13,7 @@ const { saveLocationToUser } = require('./userService');
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Add JSON body parsing middleware
+app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
@@ -20,12 +21,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-
-// const User = mongoose.model('User', {
-//   name: String,
-//   email: String,
-//   savedLocations: [{ type: String }],
-// });
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
@@ -74,17 +69,30 @@ app.post('/saveLocation', async (req, res) => {
   }
 });
 
+app.get('/secure-route', verifyUser, (req, res) => {
+  // This route is protected and will only be accessible to authenticated users
+  res.send('Authenticated route');
+});
+
 // Handle chat requests
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
 
   // Check if the prompt contains keywords related to restaurants or locations
-  const isRestaurantRelated = prompt.toLowerCase().includes('restaurant') || prompt.toLowerCase().includes('food');
-  const isLocationRelated = prompt.toLowerCase().includes('location') || prompt.toLowerCase().includes('place');
+  const isRestaurantRelated =
+    prompt.toLowerCase().includes('restaurant') ||
+    prompt.toLowerCase().includes('food');
+  const isLocationRelated =
+    prompt.toLowerCase().includes('location') ||
+    prompt.toLowerCase().includes('place');
 
   if (!isRestaurantRelated && !isLocationRelated) {
     // Return an error response
-    return res.status(400).json({ error: 'Please enter a query related to restaurants or locations.' });
+    return res
+      .status(400)
+      .json({
+        error: 'Please enter a query related to restaurants or locations.',
+      });
   }
 
   try {
@@ -95,17 +103,6 @@ app.get('/chat', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// app.get('/chat', async (req, res) => {
-//   const prompt = req.query.message;
-//   try {
-//     const message = await askAI(prompt);
-//     res.status(200).send(message);
-//   } catch (error) {
-//     console.error('Error:', error);
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
 
 // Handle other routes
 app.get('/events', handleEventsRequest);
