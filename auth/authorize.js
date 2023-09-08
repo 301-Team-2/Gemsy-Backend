@@ -1,43 +1,35 @@
-const jwt = require('jsonwebtoken'); // auth
-const jwksClient = require('jwks-rsa'); // auth
+const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
 
-// This is a special function for express called "Middleware"
-// We can simply "use()" this in our server
-// When a user is validated, request.user will contain their information
-// Otherwise, this will force an error
+// Middleware for user authentication
 function verifyUser(request, response, next) {
-
+  // Callback function for JWT verification
   function valid(err, user) {
     request.user = user;
     next();
   }
 
   try {
+    // Extract the token from the authorization header
     const token = request.headers.authorization.split(' ')[1];
+    // Verify the token using the getKey function
     jwt.verify(token, getKey, {}, valid);
   } catch (error) {
     next('Not Authorized');
   }
 }
 
-
-// =============== HELPER METHODS, pulled from the jsonwebtoken documentation =================== //
-//                 https://www.npmjs.com/package/jsonwebtoken                                     //
-
-// Define a client, this is a connection to YOUR auth0 account, using the URL given in your dashboard
+// Define a client for accessing Auth0 JSON Web Key Set (JWKS)
 const client = jwksClient({
-  // this url comes from your app on the auth0 dashboard
-  jwksUri: process.env.JWKS_URI,
+  jwksUri: process.env.JWKS_URI, // URL from your Auth0 app dashboard
 });
 
-// Match the JWT's key to your Auth0 Account Key so we can validate it
+// Callback function to fetch the key for JWT verification
 function getKey(header, callback) {
   client.getSigningKey(header.kid, function (err, key) {
     const signingKey = key.publicKey || key.rsaPublicKey;
     callback(null, signingKey);
   });
 }
-
-
 
 module.exports = verifyUser;
