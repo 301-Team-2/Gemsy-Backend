@@ -9,6 +9,8 @@ const mongoose = require('mongoose');
 const EventModel = require('./EventModel');
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
+const { saveLocationToUser } = require('./userService');
+
 const readline = require('readline');
 
 const app = express();
@@ -66,6 +68,19 @@ app.post('/events', async (req, res) => {
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/saveLocation', async (req, res) => {
+  const userEmail = req.body.userEmail;
+  const location = req.body.location;
+
+  try {
+    const updatedUser = await saveLocationToUser(userEmail, location);
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
