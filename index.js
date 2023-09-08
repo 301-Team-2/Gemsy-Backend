@@ -1,73 +1,72 @@
 'use strict';
 
-require('dotenv').config();
+const dotenv = require('dotenv').config();
+const OpenAIApi = require('openai');
 const express = require('express');
 const cors = require('cors');
-const OpenAIApi = require('openai');
-const { saveLocationToUser } = require('./userService');
-
+const axios = require('axios');
+const mongoose = require('mongoose');
+const handleEventsRequest = require('./events.js');
+const handleRestaurantsRequest = require('./restaurants.js');
+const readline = require('readline');
 const app = express();
 app.use(cors());
-app.use(express.json()); // Add JSON body parsing middleware
-
 const PORT = process.env.PORT || 3001;
+
+
+const eventsRoute = require('./routes/events-database.js');
+const restaurantRoute = require('./routes/restaurants-database.js');
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Define the askAI function for chat requests
-const askAI = async (input) => {
-  try {
-    const res = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: input }],
-    });
-    return res.choices[0].message.content;
-  } catch (error) {
-    console.error('Error:', error);
-    throw error;
-  }
+const askAI = async input => {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [{role: 'user', content: input}]
+  });
+
+  return res.choices[0].message.content;
 };
 
-// Handle saving locations to a user
-app.post('/saveLocation', async (req, res) => {
-  const userEmail = req.body.userEmail;
-  const location = req.body.location;
+// openai.chat.completions.create({
+//   model: 'gpt-3.5-turbo',
+//   messages: [{role: 'user', content: input}]
+// }).then(res => {
+//   console.log(res.choices);
+// });
+const userInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+userInterface.prompt();
+userInterface.on('line', async (input) => {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: input }],
+  });
+  console.log(res.choices);
+  userInterface.prompt();
 
-  try {
-    // Implement the `saveLocationToUser` function as needed
-    const updatedUser = await saveLocationToUser(userEmail, location);
-
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  // .then(res => {
+  //   console.log(res.choices);
+  // });
 });
 
-// Handle chat requests
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
 
-  // Check if the prompt contains keywords related to restaurants or locations
-  const isRestaurantRelated = prompt.toLowerCase().includes('restaurant') || prompt.toLowerCase().includes('food');
-  const isLocationRelated = prompt.toLowerCase().includes('location') || prompt.toLowerCase().includes('place');
-
-  if (!isRestaurantRelated && !isLocationRelated) {
-    // Return an error response
-    return res.status(400).json({ error: 'Please enter a query related to restaurants or locations.' });
-  }
-
-  try {
-    const message = await askAI(prompt);
-    res.status(200).send(message);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  }
+  let message = await askAI(prompt);
+  res.status(200).send(message);
 });
 
-// Start the server
+app.get('/events', handleEventsRequest);
+app.get('/restaurants', handleRestaurantsRequest);
+
+app.use('/events', eventsRoute);
+app.use('/restaurants', restaurantRoute);
+
 app.listen(PORT, () => {
-  console.log(`App is listening on port ${PORT}`);
+  console.log('App is listening.');
 });
