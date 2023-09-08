@@ -42,7 +42,9 @@ router.delete('/:restaurantId', async (req, res) => {
   }
 
   try {
-    let result = await RestaurantModel.findByIdAndDelete(req.params.restaurantId);
+    let result = await RestaurantModel.findByIdAndDelete(
+      req.params.restaurantId
+    );
     if (result) {
       res.status(204).send('Successfully deleted.');
     } else {
