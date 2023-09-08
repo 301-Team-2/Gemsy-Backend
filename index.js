@@ -3,11 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const OpenAIApi = require('openai');
-const EventModel = require('./EventModel');
-const handleEventsRequest = require('./events.js');
-const handleRestaurantsRequest = require('./restaurants.js');
 const { saveLocationToUser } = require('./userService');
 
 const app = express();
@@ -15,11 +11,6 @@ app.use(cors());
 app.use(express.json()); // Add JSON body parsing middleware
 
 const PORT = process.env.PORT || 3001;
-
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
@@ -39,25 +30,13 @@ const askAI = async (input) => {
   }
 };
 
-// Handle events creation
-app.post('/events', async (req, res) => {
-  try {
-    const eventData = req.body;
-    const newEvent = new EventModel(eventData);
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
 // Handle saving locations to a user
 app.post('/saveLocation', async (req, res) => {
   const userEmail = req.body.userEmail;
   const location = req.body.location;
 
   try {
+    // Implement the `saveLocationToUser` function as needed
     const updatedUser = await saveLocationToUser(userEmail, location);
 
     res.json(updatedUser);
@@ -87,10 +66,6 @@ app.get('/chat', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// Handle other routes
-app.get('/events', handleEventsRequest);
-app.get('/restaurants', handleRestaurantsRequest);
 
 // Start the server
 app.listen(PORT, () => {
