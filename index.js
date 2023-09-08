@@ -6,12 +6,15 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const mongoose = require('mongoose');
+
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
 const readline = require('readline');
 const app = express();
 app.use(cors());
+
 const PORT = process.env.PORT || 3001;
+const { verifyUser } = require('./auth'); // Adjust the path as needed
 
 
 const eventsRoute = require('./routes/events-database.js');
@@ -60,6 +63,7 @@ app.get('/chat', async (req, res) => {
   let message = await askAI(prompt);
   res.status(200).send(message);
 });
+
 
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
