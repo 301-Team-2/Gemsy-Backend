@@ -1,120 +1,76 @@
 'use strict';
 
-require('dotenv').config();
+const dotenv = require('dotenv').config();
+const OpenAIApi = require('openai');
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 const mongoose = require('mongoose');
-const verifyUser = require('./auth/authorize');
-const OpenAIApi = require('openai');
-const EventModel = require('./EventModel');
+
 const handleEventsRequest = require('./events.js');
 const handleRestaurantsRequest = require('./restaurants.js');
-const { saveLocationToUser } = require('./userService');
-
+const readline = require('readline');
 const app = express();
 app.use(cors());
-app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 const { verifyUser } = require('./auth'); // Adjust the path as needed
 
-// Apply the middleware to routes that need authentication
-app.use('/', verifyUser, (req, res) => {
-  // This route is protected and requires authentication
-  res.json({ message: 'Authenticated route', user: req.user });
-});
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+
+const eventsRoute = require('./routes/events-database.js');
+const restaurantRoute = require('./routes/restaurants-database.js');
 
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Define the askAI function for chat requests
-const askAI = async (input) => {
-  try {
-    const res = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: input }],
-    });
-    return res.choices[0].message.content;
-  } catch (error) {
-    console.error('Error:', error);
-    throw error;
-  }
+const askAI = async input => {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [{role: 'user', content: input}]
+  });
+
+  return res.choices[0].message.content;
 };
 
-// API routes
+// openai.chat.completions.create({
+//   model: 'gpt-3.5-turbo',
+//   messages: [{role: 'user', content: input}]
+// }).then(res => {
+//   console.log(res.choices);
+// });
+const userInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+userInterface.prompt();
+userInterface.on('line', async (input) => {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: input }],
+  });
+  console.log(res.choices);
+  userInterface.prompt();
 
-// Handle events creation
-app.post('/events', async (req, res) => {
-  try {
-    const eventData = req.body;
-    const newEvent = new EventModel(eventData);
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  // .then(res => {
+  //   console.log(res.choices);
+  // });
 });
 
-// Handle saving locations to a user
-app.post('/saveLocation', async (req, res) => {
-  const userEmail = req.body.userEmail;
-  const location = req.body.location;
-
-  try {
-    const updatedUser = await saveLocationToUser(userEmail, location);
-
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/secure-route', verifyUser, (req, res) => {
-  // This route is protected and will only be accessible to authenticated users
-  res.send('Authenticated route');
-});
-
-// Handle chat requests
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
 
-  // Check if the prompt contains keywords related to restaurants or locations
-  const isRestaurantRelated =
-    prompt.toLowerCase().includes('restaurant') ||
-    prompt.toLowerCase().includes('food');
-  const isLocationRelated =
-    prompt.toLowerCase().includes('location') ||
-    prompt.toLowerCase().includes('place');
-
-  if (!isRestaurantRelated && !isLocationRelated) {
-    // Return an error response
-    return res
-      .status(400)
-      .json({
-        error: 'Please enter a query related to restaurants or locations.',
-      });
-  }
-
-  try {
-    const message = await askAI(prompt);
-    res.status(200).send(message);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  }
+  let message = await askAI(prompt);
+  res.status(200).send(message);
 });
 
-// Handle other routes
+
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
 
-// Start the server
+app.use('/events', eventsRoute);
+app.use('/restaurants', restaurantRoute);
+
 app.listen(PORT, () => {
-  console.log(`App is listening on port ${PORT}`);
+  console.log('App is listening.');
 });
