@@ -21,12 +21,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 });
 
-// const User = mongoose.model('User', {
-//   name: String,
-//   email: String,
-//   savedLocations: [{ type: String }],
-// });
-
 const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -44,8 +38,6 @@ const askAI = async (input) => {
     throw error;
   }
 };
-
-// API routes
 
 // Handle events creation
 app.post('/events', async (req, res) => {
@@ -95,17 +87,6 @@ app.get('/chat', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
-// app.get('/chat', async (req, res) => {
-//   const prompt = req.query.message;
-//   try {
-//     const message = await askAI(prompt);
-//     res.status(200).send(message);
-//   } catch (error) {
-//     console.error('Error:', error);
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
 
 // Handle other routes
 app.get('/events', handleEventsRequest);
