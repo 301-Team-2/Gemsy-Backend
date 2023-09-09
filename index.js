@@ -56,8 +56,8 @@ app.get('/chat', async (req, res) => {
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
 
-app.use('/events', eventsRoute);
-app.use('/restaurants', restaurantRoute);
+app.use('/eventsdb', eventsRoute);
+app.use('/restaurantsdb', restaurantRoute);
 
 app.listen(PORT, () => {
   console.log('App is listening.');
