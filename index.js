@@ -48,16 +48,6 @@ app.post('/saveLocation', async (req, res) => {
 // Handle chat requests
 app.get('/chat', async (req, res) => {
   const prompt = req.query.message;
-
-  // Check if the prompt contains keywords related to restaurants or locations
-  const isRestaurantRelated = prompt.toLowerCase().includes('restaurant') || prompt.toLowerCase().includes('food');
-  const isLocationRelated = prompt.toLowerCase().includes('location') || prompt.toLowerCase().includes('place');
-
-  if (!isRestaurantRelated && !isLocationRelated) {
-    // Return an error response
-    return res.status(400).json({ error: 'Please enter a query related to restaurants or locations.' });
-  }
-
   try {
     const message = await askAI(prompt);
     res.status(200).send(message);
@@ -71,3 +61,17 @@ app.get('/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`App is listening on port ${PORT}`);
 });
+
+
+
+
+
+
+// // Check if the prompt contains keywords related to restaurants or locations
+// const isRestaurantRelated = prompt.toLowerCase().includes('restaurant') || prompt.toLowerCase().includes('food');
+// const isLocationRelated = prompt.toLowerCase().includes('location') || prompt.toLowerCase().includes('place');
+
+// // if (!isRestaurantRelated && !isLocationRelated) {
+// //   // Return an error response
+// //   return res.status(400).json({ error: 'Please enter a query related to restaurants or locations.' });
+// // }
