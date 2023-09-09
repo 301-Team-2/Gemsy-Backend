@@ -6,6 +6,11 @@ const cors = require('cors');
 const OpenAIApi = require('openai');
 const { saveLocationToUser } = require('./userService');
 
+const handleRestaurantsRequest = require('./restaurants');
+const handleEventsRequest = require('./events');
+// const restaurantRoutes = require('./routes/restaurants-database');
+// const eventRoutes = require('./routes/events-database');
+
 const app = express();
 app.use(cors());
 app.use(express.json()); // Add JSON body parsing middleware
@@ -56,6 +61,13 @@ app.get('/chat', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+app.get('/restaurants', handleRestaurantsRequest);
+app.get('/events', handleEventsRequest);
+
+// Routes connecting to Mongo: note working as of Sept 9 2023
+// app.use('/resturants', restaurantRoutes);
+// app.use('/events', eventRoutes);
 
 // Start the server
 app.listen(PORT, () => {
