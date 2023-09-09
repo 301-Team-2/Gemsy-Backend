@@ -14,8 +14,7 @@ const app = express();
 app.use(cors());
 
 const PORT = process.env.PORT || 3001;
-const { verifyUser } = require('./auth'); // Adjust the path as needed
-
+const { verifyUser } = require('./auth');
 
 const eventsRoute = require('./routes/events-database.js');
 const restaurantRoute = require('./routes/restaurants-database.js');
@@ -24,21 +23,15 @@ const openai = new OpenAIApi({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const askAI = async input => {
+const askAI = async (input) => {
   const res = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
-    messages: [{role: 'user', content: input}]
+    messages: [{ role: 'user', content: input }],
   });
 
   return res.choices[0].message.content;
 };
 
-// openai.chat.completions.create({
-//   model: 'gpt-3.5-turbo',
-//   messages: [{role: 'user', content: input}]
-// }).then(res => {
-//   console.log(res.choices);
-// });
 const userInterface = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -51,10 +44,6 @@ userInterface.on('line', async (input) => {
   });
   console.log(res.choices);
   userInterface.prompt();
-
-  // .then(res => {
-  //   console.log(res.choices);
-  // });
 });
 
 app.get('/chat', async (req, res) => {
@@ -63,7 +52,6 @@ app.get('/chat', async (req, res) => {
   let message = await askAI(prompt);
   res.status(200).send(message);
 });
-
 
 app.get('/events', handleEventsRequest);
 app.get('/restaurants', handleRestaurantsRequest);
