@@ -8,7 +8,6 @@ const router = express.Router();
 
 router.use(express.json());
 
-// Get all events
 router.get('/', async (req, res) => {
   try {
     let documents = await EventModel.find({});
@@ -19,7 +18,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Save an event
 router.post('/', async (req, res) => {
   let {
     name,
@@ -50,7 +48,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Delete an event
 router.delete('/:eventId', async (req, res) => {
   const { eventId } = req.params;
 
